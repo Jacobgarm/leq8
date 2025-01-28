@@ -1,0 +1,30 @@
+'start
+	flv 4
+	stb 0
+	rdi 1
+	sta 255
+	mul
+	jnz 'move
+	rdi 2
+	shr 1
+	sta 1
+	mul
+	jnz 'move
+	rdi 4
+	shr 2
+	sta 240
+	mul
+	jnz 'move
+	rdi 8
+	shr 3
+	sta 16
+	mul
+'move
+	swp
+	rdr 0
+	add
+	mvr 0
+	swp
+	mvv 30
+	fsh
+	jmp 'start

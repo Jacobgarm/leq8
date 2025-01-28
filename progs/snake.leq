@@ -1,0 +1,197 @@
+// Memory layout
+// byte (0) is movement direction
+// byte (1) is current length
+// byte (2) is L + 5
+// byte (3) is position of apple
+// byte (4) is temp 
+// byte (5) is head of snake
+// byte (255) is the current LCG
+
+// Initialise
+	stb 1  // Dir
+	mvr 0
+	stb 3   // Length
+	mvr 1
+	stb 8 // L + 5
+	mvr 2
+	stb 90
+	mvr 3
+	stb 130  // Head
+	mvr 5
+	stb 129
+	mvr 6
+	stb 128
+	mvr 7
+
+'loop
+// Update LCG
+	sta 53     // a = 53
+	rdr 255
+	mul
+	sta 21     // c = 21
+	add
+	swp
+	rdi 255    // extra stuff from input
+	add
+	mvr 255
+
+'get_dir
+	stb 0
+	rdi 1
+	sta 255
+	mul
+	jnz 'got_dir
+	rdi 2
+	shr 1
+	sta 1
+	mul
+	jnz 'got_dir
+	rdi 4
+	shr 2
+	sta 240
+	mul
+	jnz 'got_dir
+	rdi 8
+	shr 3
+	sta 16
+	mul
+	jnz 'got_dir
+	jmp 'no_dir
+'got_dir
+	mvr 0
+'no_dir
+
+// Check wall collision
+	rdr 0
+	swp
+'east
+	stb 1
+	xor
+	jnz 'west
+	rdr 5
+	sta 15
+	and // Check if last four bits are set
+	xor
+	jnz 'apple
+	jmp 'end
+'west
+	stb 255
+	xor
+	jnz 'north
+	rdr 5
+	shl 4 // Remove upper half to check if zero
+	jnz 'apple
+	jmp 'end
+'north
+	stb 16
+	xor
+	jnz 'south
+	rdr 5
+	shr 4
+	sta 15
+	xor // Check if upper four bits are set
+	jnz 'apple
+	jmp 'end
+'south
+	// We know that we must be heading south by exclusion
+	rdr 5
+	shr 4 // Remove lower half to check if zero
+	jnz 'apple
+	jmp 'end
+
+// Check apple
+'apple
+	rdr 3
+	swp
+	rdr 5
+	xor
+	jnz 'move
+// Got apple
+	sta 1
+	rdr 1
+	add
+	mvr 1
+	rdr 2
+	add
+	mvr 2
+	rdr 255
+	mvr 3
+
+// Update snake
+'move
+	sta 3
+	rdr 1
+	add
+	swp
+'copy
+	rda
+	inc
+	mva
+	dec
+	dec
+	stb 252
+	add
+	jnz 'copy
+
+// Update head
+	inc
+	rda
+	swp
+	rdr 0
+	add
+	mvr 5
+	
+// Check collision
+	sta 6
+'col
+	rda
+	swp
+	mvr 4
+	rdr 5
+	xor
+	jnz 'no_hit
+	jmp 'end
+'no_hit
+	rdr 4
+	swp
+	inc
+	rdr 2
+	xor
+	jnz 'col
+
+'draw
+	flv 8
+	stb 0
+'checker_loop
+	swp
+	stb 0
+	or
+	shr 4
+	xor
+	shl 7
+	jnz 'next_checker
+	mvv 9
+'next_checker
+	inc
+	swp
+	jnz 'checker_loop
+
+	rdr 3 // Apple
+	swp
+	mvv 48
+	rdr 5 // Head
+	swp
+	mvv 51
+	sta 6
+'draw_loop
+	rda
+	swp
+	mvv 17
+	swp
+	inc
+	rdr 2
+	xor
+	jnz 'draw_loop
+	fsh
+	jmp 'loop
+'end

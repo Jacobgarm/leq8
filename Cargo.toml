@@ -1,0 +1,10 @@
+[package]
+name = "leq8"
+version = "0.1.0"
+edition = "2024"
+authors = ["Jacob Garm <jacobgarm@hotmail.dk>"]
+repository = "https://github.com/jacobgarm/leq8"
+license = "MIT"
+
+[dependencies]
+raylib = { version = "5.0.2", features = ["wayland"] }
